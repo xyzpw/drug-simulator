@@ -4,7 +4,10 @@ import os
 isFloatPattern = re.compile(r"^(?:(?:0)?\.\d+)$")
 def validateArgs(args: dict):
     if args.get("units"):
-        print("available units: (s)econds, (m)inutes, (h)ours, (d)ays")
+        availableUnitsStr = """time units: s(econds), m(inutes), h(ours), d(ays)
+        \rmass units: mg, milligram(s), ug, mcg, microgram(s), g, gram(s)"""
+        print(availableUnitsStr)
+        raise SystemExit(0)
     if args.get("irfrac") != None and args.get("dr") == None:
         raise SystemExit("irfrac must be accompanied by delayed release")
     if args.get("irfrac") != None:
@@ -30,8 +33,6 @@ def validateArgs(args: dict):
     if args.get("dr_max"):
         if args.get("dr") == None:
             raise SystemExit("'dr_max' must be accompanied by 'dr'")
-        if args.get("time") != None or args.get("elapse") != None:
-            raise SystemExit("'dr_max' cannot be used with 'time' or 'elapse'")
         if args.get("dr_max") and args.get("probability"):
             raise SystemExit("'dr_max' and 'probability' cannot be used simultaneously")
     if args.get("clear"):

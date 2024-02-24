@@ -30,7 +30,7 @@ parser.add_argument("--autocomplete", help="immediatly exits once concentration 
 parser.add_argument("--dr", help="duration until second part of dose is released (delayed release form)", metavar="<time>[ unit]")
 parser.add_argument("--irfrac", help="fraction of dose that is instant release (used with dr)", metavar="decimal")
 parser.add_argument("--lagtime", help="time taken for drug to appear", metavar="<time>[ unit]")
-parser.add_argument("--dr_max", help="displays the maximum achieved concentration during DR", action="store_true")
+parser.add_argument("--dr_max", help="displays the maximum achieved concentration since starting the simulation", action="store_true")
 parser.add_argument("--clear", help="clears the screen prior to script commencement", action="store_true")
 parser.add_argument("--msg", help="custom message on start", metavar="<msg>")
 args = vars(parser.parse_args())
@@ -60,10 +60,18 @@ massUnit = None
 try:
     if not useProbability:
         dose = getUIValue("dose", inputText="dose")
-        massUnitSearch = re.search(r"^(?P<dose>(?:\.|\d+\.)?\d+)(?:\s)?(?P<unit>(?:ug|mg|g))$", str(dose))
+        dose = dose.replace(',', '')
+        massUnitSearch = re.search(r"^(?P<dose>(?:\d+?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
         if bool(massUnitSearch):
             dose = float(massUnitSearch.group("dose"))
             massUnit = massUnitSearch.group("unit")
+            match massUnit:
+                case "milligram" | "milligrams":
+                    massUnit = "mg"
+                case "ug" | "micrograms" | "microgram":
+                    massUnit = "mcg"
+                case "gram" | "grams":
+                    massUnit = "g"
     else:
         dose = float(1)
     if startAtCmax:
@@ -217,13 +225,13 @@ def startDefault():
             currentConcentration = fixForPrecision(currentConcentration)
         if massUnit != None and phase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(currentConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
-            concentration_response = _resultHandler.defaultResult(phase, adjustedConcentration, massUnit)
+            concentration_response = _resultHandler.defaultResult(phase, adjustedConcentration, adjustedPrecision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         elif massUnit != None and phase == "absorption":
-            concentration_response = _resultHandler.defaultResult(phase, currentConcentration, massUnit)
+            concentration_response = _resultHandler.defaultResult(phase, currentConcentration, precision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         else:
-            concentration_response = _resultHandler.defaultResult(phase, currentConcentration)
+            concentration_response = _resultHandler.defaultResult(phase, currentConcentration, precision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         checkIfEliminated(currentConcentration, phase)
 
@@ -264,6 +272,9 @@ def startDefaultDR():
         delayedTmaxEpoch = delayedStartingEpoch + tmax
     elif startAtCmax:
         tmaxedEpoch = startingEpoch
+    #HACK: dr_max
+    if args.get("dr_max") and getEpoch() > DrLagTime + startingEpoch:
+        raise SystemExit("'dr_max' cannot be used after delayed release has started")
     while True:
         time.sleep(updateIntervalSeconds)
         timeSinceStart = getEpoch(False) - startingEpoch
@@ -310,21 +321,21 @@ def startDefaultDR():
         if massUnit != None and phase == "elimination" and delayedPhase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(totalConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, massUnit, maxMassUnit, DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, adjustedPrecision, massUnit, maxMassUnit, DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, massUnit)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, adjustedPrecision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         elif massUnit != None and (phase == "absorption" or delayedPhase in ["absorption", "lag"]):
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, massUnit, maxMassUnit, DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, massUnit, maxMassUnit, DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, massUnit)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         else:
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, max_concentration=DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, max_concentration=DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         checkIfEliminated(totalConcentration, delayedPhase)
 
@@ -370,12 +381,14 @@ def startLinear():
             currentConcentration = fixForPrecision(currentConcentration)
         if massUnit != None and phase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(currentConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
-            concentration_response = f"concentration ({phase}): {_dosageUnits.concentrationFloatString(adjustedConcentration, adjustedPrecision)} {massUnit}"
+            concentration_response = _resultHandler.defaultResult(phase, adjustedConcentration, adjustedPrecision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         elif massUnit != None and phase == "absorption":
-            print(f"\033[2Kconcentration ({phase}): {currentConcentration} {massUnit}", end='\r', flush=True)
+            concentration_response = _resultHandler.defaultResult(phase, currentConcentration, precision, massUnit)
+            print(f"\033[2K{concentration_response}", end='\r', flush=True)
         else:
-            print(f"\033[2Kconcentration ({phase}): {currentConcentration}", end='\r', flush=True)
+            concentration_response = _resultHandler.defaultResult(phase, currentConcentration, precision)
+            print(f"\033[2K{concentration_response}", end='\r', flush=True)
         checkIfEliminated(currentConcentration, phase)
 
 def startLinearDR():
@@ -414,6 +427,8 @@ def startLinearDR():
         delayedTmaxEpoch = delayedStartingEpoch + tmax
     elif startAtCmax:
         tmaxedEpoch = startingEpoch
+    if args.get("dr_max") and getEpoch() > DrLagTime + startingEpoch:
+        raise SystemExit("'dr_max' cannot be used after delayed release has started")
     while True:
         time.sleep(updateIntervalSeconds)
         timeSinceStart = getEpoch(False) - startingEpoch
@@ -463,21 +478,21 @@ def startLinearDR():
         if massUnit != None and phase == "elimination" and delayedPhase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(totalConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, massUnit, maxMassUnit, DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, adjustedPrecision, massUnit, maxMassUnit, DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, massUnit)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, adjustedConcentration, adjustedPrecision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         elif massUnit != None and (phase == "absorption" or delayedPhase in ["absorption", "lag"]):
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, massUnit, maxMassUnit, DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, massUnit, max_concentration=DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, massUnit)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, massUnit)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         else:
             if args.get("dr_max"):
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, max_concentration=DrMaxConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision, max_concentration=DrMaxConcentration)
             else:
-                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration)
+                concentration_response = _resultHandler.defaultDrResult(phase, delayedPhase, totalConcentration, precision)
             print(f"\033[2K{concentration_response}", end='\r', flush=True)
         checkIfEliminated(totalConcentration, delayedPhase)
 

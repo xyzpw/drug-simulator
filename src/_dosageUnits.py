@@ -5,7 +5,7 @@ def adjustConcentrationFromUnit(conc: float, adjConc: float, prec: int, adjPrec:
             if unit == "g":
                 unit = "mg"
             elif unit == "mg":
-                unit = "ug"
+                unit = "mcg"
     if prec - adjPrec != 0:
         adjConc = int(conc * 10**(prec+(prec-adjPrec))) / 10**(prec)
     else:
