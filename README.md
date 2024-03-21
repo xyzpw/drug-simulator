@@ -27,9 +27,9 @@ half-life:
 ```
 After the information has been given, the simulation will start.<br>
 
-Optionally, you can use the `lineara` option if you prefer to not use absorption half-lives or don't know the value:
+Optionally, you can use the `linearabs` option if you prefer to not use absorption half-lives or don't know the value:
 ```bash
-$ ./drug-simulator.py --lineara
+$ ./drug-simulator.py --linearabs
 ```
 #### Time Units
 When entering the time, units are by default set to seconds.<br>
