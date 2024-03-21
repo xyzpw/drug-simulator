@@ -1,0 +1,14 @@
+{
+    "dose": "231.25 mg",
+    "tmax": "50 minutes",
+    "t12abs": "15 minutes",
+    "t12": "65 minutes",
+    "lagtime": "10 minutes",
+    "msg": "1/8 tsp l-theanine",
+    "f": "0.54",
+    "comment": [
+        "Unknown json keys will have no effect on the script - they can be used as comments.",
+        "This is an example of 1/8 tsp of l-theanine.",
+        "Dose was calculated from 1/8 tsp (5/8 mL) by l-theanine bulk density (0.37 g/ml)"
+    ]
+}

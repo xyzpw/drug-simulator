@@ -43,9 +43,11 @@ def convertToSeconds(_time, unit) -> float:
             return _time * 86400
     return _time
 
-def fixTimeUI(timeUI) -> float:
+def fixTimeUI(timeUI: str) -> float:
     if timeUI in ['', None]:
-        return None
+        return
+    if not isinstance(timeUI, str):
+        timeUI = str(timeUI)
     timePatternSearch = timePattern.search(timeUI)
     try:
         unfixedTime = float(timePatternSearch.group("time"))

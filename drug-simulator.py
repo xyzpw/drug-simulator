@@ -6,7 +6,12 @@ import argparse
 import re
 import math
 import traceback
-from src import _timeConversions, _arghandler, _dosageUnits, _resultHandler
+from src import _timeConversions
+from src import _arghandler
+from src import _dosageUnits
+from src import _resultHandler
+from src._uiHandler import *
+from src._fileReader import *
 
 parser = argparse.ArgumentParser(
     description="description: Simulates the absorption and elimination of drugs.",
@@ -16,25 +21,29 @@ parser.add_argument("--help", "-h", help="displays help and exits", action="help
 parser.add_argument("--units", help="displays available time units [default: seconds]", action="store_true")
 parser.add_argument("--dose", help="the dosage to be simulated", metavar="<dose>[ unit]")
 parser.add_argument("--tmax", help="time it takes to reach peak concentration", metavar="<time>[ unit]")
-parser.add_argument("--t12a", help="absorption half-life of the drug to be simulated", metavar="<time>[ unit]")
+parser.add_argument("--t12abs", help="absorption half-life of the drug to be simulated", metavar="<time>[ unit]")
 parser.add_argument("--t12", help="half-life of the drug to be simulated", metavar="<time>[ unit]")
 parser.add_argument("--probability", help="display concentration as probability of drug remaining", action="store_true")
 parser.add_argument("--linear", help="calculates and uses elimination constant of given half-life", action="store_true")
-parser.add_argument("--lineara", help="uses linear absorption regardless of method", action="store_true")
+parser.add_argument("--linearabs", help="uses linear absorption regardless of method", action="store_true")
 parser.add_argument("--time", help="time the dose was administered in 24-hour format", metavar="HH:MM")
 parser.add_argument("--elapse", help="how much time has passed since the simulation was started", metavar="HH:MM")
 parser.add_argument("--tmaxed", help="starts simulation assuming the drug has already peaked", action="store_true")
 parser.add_argument("-p", help="decimal places to keep for displayed results", metavar="decimal_precision", dest="precision", default=0)
 parser.add_argument("-f", help="bioavailability of the drug being simulated", metavar="decimal", dest="bioavailability")
-parser.add_argument("--autocomplete", help="immediatly exits once concentration reaches 0", action="store_true")
+parser.add_argument("--autocomplete", help="immediately exits once concentration reaches 0", action="store_true")
 parser.add_argument("--dr", help="duration until second part of dose is released (delayed release form)", metavar="<time>[ unit]")
 parser.add_argument("--irfrac", help="fraction of dose that is instant release (used with dr)", metavar="decimal")
 parser.add_argument("--lagtime", help="time taken for drug to appear", metavar="<time>[ unit]")
 parser.add_argument("--dr_max", help="displays the maximum achieved concentration since starting the simulation", action="store_true")
 parser.add_argument("--clear", help="clears the screen prior to script commencement", action="store_true")
 parser.add_argument("--msg", help="custom message on start", metavar="<msg>")
+parser.add_argument("--file", help="reads pharmacokinetic information from a json file", metavar="<file_name>")
 args = vars(parser.parse_args())
 _arghandler.validateArgs(args)
+argFile = args.get("file")
+if bool(argFile):
+    args = validateFileArgs(argFile, args)
 
 useProbability, useLinear, startAtCmax = args.get("probability"), args.get("linear"), args.get("tmaxed")
 precision = int(args.get("precision"))
@@ -46,6 +55,11 @@ def getEpoch(asInt=True) -> float | int:
     return time.time()
 
 def getUIValue(uiTxt, argLocation=None, inputText=None):
+    if bool(argFile):
+        phContent = readFile(argFile)
+        phResult = phContent.get(uiTxt)
+        if phResult != None:
+            return phResult
     if argLocation == None:
         argLocation = uiTxt
     if inputText == None:
@@ -58,57 +72,23 @@ def getUIValue(uiTxt, argLocation=None, inputText=None):
 massUnit = None
 # user input
 try:
-    if not useProbability:
-        dose = getUIValue("dose", inputText="dose")
-        dose = dose.replace(',', '')
-        massUnitSearch = re.search(r"^(?P<dose>(?:\d+?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
-        if bool(massUnitSearch):
-            dose = float(massUnitSearch.group("dose"))
-            massUnit = massUnitSearch.group("unit")
-            match massUnit:
-                case "milligram" | "milligrams":
-                    massUnit = "mg"
-                case "ug" | "micrograms" | "microgram":
-                    massUnit = "mcg"
-                case "gram" | "grams":
-                    massUnit = "g"
-    else:
-        dose = float(1)
-    if startAtCmax:
-        tmax = float(0)
-    else:
-        tmax = getUIValue("tmax", inputText="tmax")
-        if tmax in ["now", "0", ""]:
-            startAtCmax = True
-            tmax = float(0)
-        else:
-            tmax = _timeConversions.fixTimeUI(tmax)
-    if not startAtCmax and not args.get("lineara"):
-        t12a = getUIValue("t12a", inputText="absorption half-life")
-        t12a = _timeConversions.fixTimeUI(t12a)
-    t12 = getUIValue("t12", inputText="half-life")
-    t12 = _timeConversions.fixTimeUI(t12)
-    if args.get("bioavailability") != None and not useProbability:
-        try:
-            _bioavailability = float(args.get("bioavailability"))
-            if not 1 > _bioavailability > 0:
-                raise SystemExit("bioavailability must be greater than 0 or less than 1")
-            dose = float(args.get("bioavailability")) * float(dose)
-        except:
-            raise ValueError("bioavailability must be decimal value")
-    if args.get("dr") != None:
-        DrLagTime = _timeConversions.fixTimeUI(args.get("dr"))
-        # Instant release fraction is released instantly, the remaining dose is released after a given time.
-        IRFrac = _timeConversions.fixTimeUI(getUIValue("irfrac", inputText="instant release dose fraction (def. 0.5)"))
-        if IRFrac in [None, '']: IRFrac = 0.5
-        if 1 < IRFrac <= 0:
-            raise SystemExit("instant release must be greater than 0 or less than 1")
+    dose, massUnit = fixDose(getUIValue("dose", inputText="dose"), useProbability)
+    if not useProbability and bool(args.get("f")):
+        dose = doseWithBioavailability(args.get("f"), dose)
+    tmax = fixTmax(getUIValue("tmax", inputText="tmax"), startAtCmax)
+    if tmax == float(0): startAtCmax = True
+    if not startAtCmax and not args.get("linearabs"):
+        t12abs = fixT12abs(getUIValue("t12abs", inputText="absorption half-life"))
+    t12 = fixT12(getUIValue("t12", inputText="half-life"))
+    if bool(args.get("dr")):
+        IRFrac, DrLagTime = fixDr(
+            getUIValue("irfrac", inputText="instant release dose fraction (def. 0.5)"),
+            getUIValue("dr")
+        )
 except (KeyboardInterrupt, EOFError):
-    print("\n", end='')
     raise SystemExit(0)
 except Exception as ERROR:
-    print("\n", end='')
-    raise SystemExit(ERROR)
+    raise SystemExit(traceback.print_exc())
 
 def getMethod():
     if useProbability:
@@ -218,10 +198,10 @@ def startDefault():
             currentConcentration = getConcentration(dose, t12, timeSinceTmax, tmaxed=True)
             currentConcentration = fixForPrecision(currentConcentration)
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentConcentration = float(dose) * (timeSinceStart / tmax)
             else:
-                currentConcentration = getConcentration(dose, t12a, timeSinceStart, tmaxed=False)
+                currentConcentration = getConcentration(dose, t12abs, timeSinceStart, tmaxed=False)
             currentConcentration = fixForPrecision(currentConcentration)
         if massUnit != None and phase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(currentConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
@@ -272,7 +252,6 @@ def startDefaultDR():
         delayedTmaxEpoch = delayedStartingEpoch + tmax
     elif startAtCmax:
         tmaxedEpoch = startingEpoch
-    #HACK: dr_max
     if args.get("dr_max") and getEpoch() > DrLagTime + startingEpoch:
         raise SystemExit("'dr_max' cannot be used after delayed release has started")
     while True:
@@ -293,10 +272,10 @@ def startDefaultDR():
             timeSinceTmax = getEpoch(False) - tmaxedEpoch
             currentConcentration = getConcentration(float(dose)*IRFrac, t12, timeSinceTmax, tmaxed=True)
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentConcentration = float(dose)*IRFrac * (timeSinceStart / tmax)
             else:
-                currentConcentration = getConcentration(float(dose)*IRFrac, t12a, timeSinceStart, tmaxed=False)
+                currentConcentration = getConcentration(float(dose)*IRFrac, t12abs, timeSinceStart, tmaxed=False)
         if not delayedHasTmaxed:
             delayedHasTmaxed = True if timeSinceStart >= (DrLagTime + tmax) else False
             if delayedHasTmaxed:
@@ -309,10 +288,10 @@ def startDefaultDR():
                 timeSinceDelayedTmax = getEpoch(False) - delayedTmaxEpoch
                 currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12, timeSinceDelayedTmax, tmaxed=True)
             else:
-                if args.get("lineara"):
+                if args.get("linearabs"):
                     currentDelayedConcentration = float(dose)*(1-IRFrac) * (timeSinceDelayedStart / tmax)
                 else:
-                    currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12a, timeSinceDelayedStart, tmaxed=False)
+                    currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12abs, timeSinceDelayedStart, tmaxed=False)
         totalConcentration = currentConcentration + currentDelayedConcentration
         totalConcentration = fixForPrecision(totalConcentration)
         if args.get("dr_max"):
@@ -374,10 +353,10 @@ def startLinear():
             if currentConcentration <= 0:
                 currentConcentration = 0
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentConcentration = float(dose) * (timeSinceStart / tmax)
             else:
-                currentConcentration = getConcentration(dose, t12a, timeSinceStart, tmaxed=False)
+                currentConcentration = getConcentration(dose, t12abs, timeSinceStart, tmaxed=False)
             currentConcentration = fixForPrecision(currentConcentration)
         if massUnit != None and phase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = _dosageUnits.adjustConcentrationFromUnit(currentConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
@@ -450,7 +429,7 @@ def startLinearDR():
             else:
                 currentConcentration = 0
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentDelayedConcentration = float(dose)*IRFrac * (timeSinceStart / tmax)
             else:
                 currentConcentration = getConcentration(float(dose)*IRFrac, t12, timeSinceStart, tmaxed=False)
@@ -466,7 +445,7 @@ def startLinearDR():
                 timeSinceDelayedTmax = getEpoch(False) - delayedTmaxEpoch
                 currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12, timeSinceDelayedTmax, tmaxed=True)
             else:
-                if args.get("lineara"):
+                if args.get("linearabs"):
                     currentDelayedConcentration = float(dose)*(1-IRFrac) * (timeSinceDelayedStart / tmax)
                 else:
                     currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12, timeSinceDelayedStart, tmaxed=False)
@@ -525,10 +504,10 @@ def startProbability():
             print(f"\033[2Kprobability of drug remaining: {currentConcentration}%", end='\r', flush=True)
             checkIfEliminated(currentConcentration)
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentConcentration = (timeSinceStart / tmax) * 100
             else:
-                currentConcentration = getConcentration(dose, t12a, timeSinceStart, tmaxed=False) * 100
+                currentConcentration = getConcentration(dose, t12abs, timeSinceStart, tmaxed=False) * 100
             currentConcentration = fixForPrecision(currentConcentration)
             print(f"\033[2Kconcentration: {currentConcentration}%", end='\r', flush=True)
 
@@ -580,10 +559,10 @@ def startProbabilityDR():
             timeSinceTmaxed = getEpoch(False) - tmaxedEpoch
             currentConcentration = getConcentration(float(dose)*IRFrac, t12, timeSinceTmaxed, tmaxed=True) * 100
         else:
-            if args.get("lineara"):
+            if args.get("linearabs"):
                 currentConcentration = (timeSinceStart / tmax) * 100
             else:
-                currentConcentration = getConcentration(float(dose)*IRFrac, t12a, timeSinceStart, tmaxed=False) * 100
+                currentConcentration = getConcentration(float(dose)*IRFrac, t12abs, timeSinceStart, tmaxed=False) * 100
         if not delayedHasTmaxed:
             delayedHasTmaxed = True if timeSinceStart >= (DrLagTime + tmax) else False
             if delayedHasTmaxed:
@@ -596,10 +575,10 @@ def startProbabilityDR():
                 timeSinceDelayedTmax = getEpoch(False) - delayedTmaxedEpoch
                 currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12, timeSinceDelayedTmax, tmaxed=True) * 100
             else:
-                if args.get("lineara"):
+                if args.get("linearabs"):
                     currentDelayedConcentration = (timeSinceDelayedStart / tmax) * 100
                 else:
-                    currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12a, timeSinceDelayedStart, tmaxed=False) * 100
+                    currentDelayedConcentration = getConcentration(float(dose)*(1-IRFrac), t12abs, timeSinceDelayedStart, tmaxed=False) * 100
         totalConcentration = fixForPrecision(float(currentConcentration) + float(currentDelayedConcentration))
         currentConcentration = fixForPrecision(float(currentConcentration))
         currentDelayedConcentration = fixForPrecision(float(currentDelayedConcentration))
