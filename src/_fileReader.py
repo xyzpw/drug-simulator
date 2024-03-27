@@ -7,13 +7,13 @@ __all__ = [
 ]
 
 def validateFile(location):
+    if not str(location).endswith(".json"): location += ".json"
     if not pathlib.Path(location).exists():
         return FileNotFoundError("file does not exist")
-    if not str(location).endswith(".json"):
-        return ValueError("file format must be json")
     return True
 
 def readFile(location: str) -> dict:
+    if not str(location).endswith(".json"): location += ".json"
     validateFileResults = validateFile(location)
     if validateFileResults != True:
         raise validateFileResults
@@ -23,6 +23,7 @@ def readFile(location: str) -> dict:
     return fileContents
 
 def validateFileArgs(location: str, args: dict) -> dict:
+    if not str(location).endswith(".json"): location += ".json"
     phContents = readFile(location)
     fileArgList = ["lagtime", "msg", "dr", "bioavailability"]
     for i in fileArgList:

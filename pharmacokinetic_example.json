@@ -5,7 +5,7 @@
     "t12": "65 minutes",
     "lagtime": "10 minutes",
     "msg": "1/8 tsp l-theanine",
-    "f": "0.54",
+    "bioavailability": "0.54",
     "comment": [
         "Unknown json keys will have no effect on the script - they can be used as comments.",
         "This is an example of 1/8 tsp of l-theanine.",

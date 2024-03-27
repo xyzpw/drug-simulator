@@ -7,7 +7,7 @@ import re
 import math
 import traceback
 from src import _timeConversions
-from src import _arghandler
+from src._arghandler import *
 from src import _dosageUnits
 from src import _resultHandler
 from src._uiHandler import *
@@ -40,7 +40,7 @@ parser.add_argument("--clear", help="clears the screen prior to script commencem
 parser.add_argument("--msg", help="custom message on start", metavar="<msg>")
 parser.add_argument("--file", help="reads pharmacokinetic information from a json file", metavar="<file_name>")
 args = vars(parser.parse_args())
-_arghandler.validateArgs(args)
+validateArgs(args)
 argFile = args.get("file")
 if bool(argFile):
     args = validateFileArgs(argFile, args)
@@ -73,8 +73,8 @@ massUnit = None
 # user input
 try:
     dose, massUnit = fixDose(getUIValue("dose", inputText="dose"), useProbability)
-    if not useProbability and bool(args.get("f")):
-        dose = doseWithBioavailability(args.get("f"), dose)
+    if not useProbability and bool(args.get("bioavailability")):
+        dose = doseWithBioavailability(args.get("bioavailability"), dose)
     tmax = fixTmax(getUIValue("tmax", inputText="tmax"), startAtCmax)
     if tmax == float(0): startAtCmax = True
     if not startAtCmax and not args.get("linearabs"):
