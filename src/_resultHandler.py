@@ -19,3 +19,19 @@ def defaultDrResult(phase: str, delayedPhase: str, concentration: float, prec: i
         else:
             result += f" (max. achieved: {maxConcentrationStr})"
     return result
+
+def probabilityResult(probability: float, prec: int, hasTmaxed: bool) -> str:
+    fixedProbability = concentrationFloatString(probability, prec) if prec > 0 else int(probability)
+    if hasTmaxed:
+        return "molecular retention probability: %s" % str(fixedProbability) + "%"
+    return "amount absorbed: %s" % str(fixedProbability) + "%"
+
+def probabilityDrResult(irProbability: float, drProbability: float, prec: int,
+                        irHasTmaxed: bool, drHasTmaxed: bool) -> tuple[str]:
+    fixedIrProbability = concentrationFloatString(irProbability, prec) if prec >= 0 else int(irProbability)
+    fixedDrProbability = concentrationFloatString(drProbability, prec) if prec >= 0 else int(drProbability)
+    getTmaxedString = lambda prob, release: "molecular retention probability (%s): %s" % (release, str(prob) + "%")
+    getNotTmaxedString = lambda prob, release: "amount absorbed (%s): %s" % (release, str(prob) + "%")
+    irResult = getTmaxedString(fixedIrProbability, "IR") if irHasTmaxed else getNotTmaxedString(fixedIrProbability, "IR")
+    drResult = getTmaxedString(fixedDrProbability, "DR") if drHasTmaxed else getNotTmaxedString(fixedDrProbability, "DR")
+    return irResult, drResult

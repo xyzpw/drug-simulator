@@ -42,13 +42,7 @@ def fixT12(t12: str|float) -> float:
     return fixTimeUI(str(t12))
 
 def doseWithBioavailability(bioavailability: float, initialDose: float|int) -> float:
-    try:
-        bioavailability = float(bioavailability)
-        if not 1 > bioavailability > 0:
-            raise ValueError("bioavailability must be greater than 0 and less than 1")
-        return initialDose * bioavailability
-    except:
-        raise TypeError("bioavailability must be type float")
+    return initialDose * bioavailability
 
 def fixDr(irFrac: float, drLagTime: float|int) -> tuple:
     drLagTime = fixTimeUI(drLagTime)

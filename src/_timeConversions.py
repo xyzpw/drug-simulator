@@ -2,18 +2,22 @@ import datetime
 import re
 import time
 
-readableTimePattern = re.compile(r"^(?P<hour>\d{1,2}):(?P<minute>\d{1,2})$")
 timePattern = re.compile(r"^(?P<time>\d+|\d+\.\d+|\.\d+)(?:(?:\s)?(?P<unit>s|sec|second(?:s)?|m|min|minute(?:s)?|h|hour(?:s)?|d|day(?:s)?))?$")
+
+readableTimePattern = re.compile(r"\A(?P<time>\d{1,2}:\d{1,2}|\d{4})\Z")
 def getHoursAndMinutesFromReadableTime(readableTime) -> tuple:
-    readableTimePatternSearch = readableTimePattern.search(readableTime)
-    if bool(readableTimePatternSearch):
-        hour = readableTimePatternSearch.group("hour")
-        minute = readableTimePatternSearch.group("minute")
-        hour, minute = int(hour), int(minute)
-        if hour > 24 or minute > 60 or (hour == 24 and minute > 59):
-            raise ValueError("time must be less than 24 hours")
-        return hour, minute
-    raise ValueError("time format must be 24-hour format")
+    try:
+        hoursAndMinutes = readableTimePattern.search(readableTime).group("time")
+        if ":" in hoursAndMinutes:
+            hours, minutes = re.search(r"(\d{1,2}):(\d{1,2})", hoursAndMinutes).groups()
+        else:
+            hours, minutes = re.search(r"\A(?P<h>\d{2})(?P<m>\d{2})\Z", hoursAndMinutes).groups()
+        hours, minutes = int(hours), int(minutes)
+        if 24 < hours < 0 or 24 < minutes < 0:
+            raise SystemExit("time must be less than 24 hours")
+        return hours, minutes
+    except:
+        raise SystemExit("time format must be 24-hour format")
 
 def getEpochFromHourAndMinute(hour, minute) -> float:
     day = datetime.datetime.now().day
