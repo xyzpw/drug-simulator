@@ -1,6 +1,6 @@
 def adjustConcentrationFromUnit(conc: float, adjConc: float, prec: int, adjPrec: int, unit: str):
     if adjPrec >= 3 and int(adjConc) == 0:
-        if int(adjConc) == 0:
+        if int(adjConc) == 0 and unit != "mcg":
             adjPrec -= 3
             if unit == "g":
                 unit = "mg"

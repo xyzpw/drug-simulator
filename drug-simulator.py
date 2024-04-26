@@ -16,6 +16,12 @@ myDrug, simInfo = SimulationInfoContainer(), SimulationInfoContainer()
 
 args = vars(createArgs().parse_args())
 validateArgs(args)
+if args.get("time_format") == "12":
+    timeFormat = r"%I:%M:%S %p (%m/%d/%Y)"
+elif args.get("time_format") == "24":
+    timeFormat = r"%H:%M:%S (%Y-%m-%d)"
+else:
+    timeFormat = r"%H%M (%Y-%m-%d)"
 
 argFile = args.get("file")
 if bool(argFile):
@@ -152,7 +158,7 @@ def startLag():
 method = getMethod()
 try:
     startingScriptEpoch = getCurrentEpoch()
-    startingDateOutput = datetime.now().strftime(r"%H%M:%S (%Y-%m-%d)")
+    startingDateOutput = datetime.now().strftime(timeFormat)
     if args.get("msg") != None:
         print(f"\n{args.get('msg')}")
     print("\nSTART: %s\n" % startingDateOutput)

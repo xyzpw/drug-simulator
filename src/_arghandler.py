@@ -80,6 +80,7 @@ def createArgs():
     parser.add_argument("--t12a", help="distribution half-life of the drug to be simulated", metavar="<time>[ unit]")
     parser.add_argument("--dist_time", help="time it takes to complete the distribution phase", metavar="<time>[ unit]")
     parser.add_argument("--biphasic", help="uses a biphasic elimination method", action="store_true")
+    parser.add_argument("--time_format", help="time format displayed upon simulation commencement", metavar="(12|24)")
     return parser
 
 #lolayylmao:DD
