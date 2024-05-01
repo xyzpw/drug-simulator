@@ -65,7 +65,6 @@ def createArgs():
     parser.add_argument("-p", help="decimal places to keep for displayed results", metavar="decimal_precision", dest="precision", default=0, type=int)
     parser.add_argument("-f", help="bioavailability of the drug being simulated",
         metavar="decimal", dest="bioavailability",
-        default=1.0,
         type=float
     )
     parser.add_argument("--autocomplete", help="immediately exits once concentration reaches 0", action="store_true")

@@ -26,6 +26,7 @@ else:
 argFile = args.get("file")
 if bool(argFile):
     args = validateFileArgs(argFile, args)
+if args.get("bioavailability") == None: args["bioavailability"] = 1.0
 
 useProbability, useLinear, startAtCmax, precision = args.get("probability"), args.get("linear"), args.get("tmaxed"), args.get("precision")
 unitPrecision = int(precision)
@@ -132,6 +133,7 @@ setattr(myDrug, "linearabs", args.get("linearabs"))
 setattr(simInfo, "autocomplete", args.get("autocomplete"))
 
 def startLag():
+    import re
     lagTime = _timeConversions.fixTimeUI( getUIValue("lagtime") )
     setattr(myDrug, "lagtime", lagTime)
     if usingTimeOrElapse:
@@ -141,18 +143,19 @@ def startLag():
     else:
         absorptionPhaseEpoch = lagTime + startingScriptEpoch
     while True:
-        sleep(updateIntervalSeconds)
         timeUntilAbsorptionPhase = absorptionPhaseEpoch - getCurrentEpoch()
+        sleep(updateIntervalSeconds)
         if timeUntilAbsorptionPhase <= 0:
             return
         minuteDigits = int(timeUntilAbsorptionPhase // 60)
         secondDigits = int(timeUntilAbsorptionPhase - minuteDigits * 60)
         if minuteDigits > 0:
             timerOutput = f"{minuteDigits} minutes, {secondDigits} seconds".replace(
-                "1 seconds", "1 second"
+                ", 1 seconds", ", 1 second"
             ).replace("1 minutes", "1 minute")
         else:
-            timerOutput = f"{secondDigits} seconds".replace("1 seconds", "1 second")
+            timerOutput = "%d seconds" % secondDigits
+            timerOutput = re.sub(r"^1 seconds$", "1 second", timerOutput)
         print(f"\033[2Klagtime remaining: {timerOutput}", end='\r', flush=True)
 
 method = getMethod()

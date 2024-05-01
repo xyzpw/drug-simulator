@@ -9,14 +9,13 @@ __all__ = [
 
 def validateFile(location):
     if not bool(re.search(r"^[\w\s\-\_]*?(\.json)?$", str(location))):
-        raise Exception("illegal characters in file name")
+        return Exception("illegal characters in file name")
     if not str(location).endswith(".json"): location += ".json"
     if not pathlib.Path(location).exists():
-        raise FileNotFoundError("file does not exist")
+        return FileNotFoundError("file does not exist")
     return True
 
 def readFile(location: str) -> dict:
-    if not str(location).endswith(".json"): location += ".json"
     validateFileResults = validateFile(location)
     if validateFileResults != True:
         raise validateFileResults
