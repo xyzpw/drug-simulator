@@ -78,7 +78,6 @@ def initiate(drugInfo: object, pkInfo: object):
                     timeElapsed=timeSinceTmax,
                     hasTmaxed=True,
                 )
-            currentConcentration = fixForPrecision(currentConcentration, precision)
         else:
             if drugInfo.linearabs:
                 currentConcentration = (timeSinceStart / tmax) * dose
@@ -90,6 +89,7 @@ def initiate(drugInfo: object, pkInfo: object):
                     timeElapsed=timeSinceStart,
                     hasTmaxed=False,
                 )
+        currentConcentration = fixForPrecision(currentConcentration, precision)
         if massUnit != None and phase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = adjustConcentrationFromUnit(currentConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
             concentration_response = defaultResult(phase, adjustedConcentration, adjustedPrecision, massUnit)

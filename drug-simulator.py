@@ -15,7 +15,6 @@ from src import sim_default, sim_linear, sim_probability
 myDrug, simInfo = SimulationInfoContainer(), SimulationInfoContainer()
 
 args = vars(createArgs().parse_args())
-validateArgs(args)
 if args.get("time_format") == "12":
     timeFormat = r"%I:%M:%S %p (%m/%d/%Y)"
 elif args.get("time_format") == "24":
@@ -26,6 +25,7 @@ else:
 argFile = args.get("file")
 if bool(argFile):
     args = validateFileArgs(argFile, args)
+validateArgs(args)
 if args.get("bioavailability") == None: args["bioavailability"] = 1.0
 
 useProbability, useLinear, startAtCmax, precision = args.get("probability"), args.get("linear"), args.get("tmaxed"), args.get("precision")
@@ -163,7 +163,7 @@ try:
     startingScriptEpoch = getCurrentEpoch()
     startingDateOutput = datetime.now().strftime(timeFormat)
     if args.get("msg") != None:
-        print(f"\n{args.get('msg')}")
+        print("\n%s" % args.get("msg"))
     print("\nSTART: %s\n" % startingDateOutput)
     if args.get("lagtime") != None:
         startLag()

@@ -7,7 +7,13 @@ __all__ = [
     "createArgs",
 ]
 
+def addCountToMsg(msg: str, count: bool):
+    return "%dx %s" % (count, msg) if count.is_integer() else "%sx %s" % (count, msg)
+
 def validateArgs(args: dict):
+    if args.get("count") != 1 and args.get("msg") != None:
+        _count: bool = args.get("count")
+        args["msg"] = addCountToMsg(args.get("msg"), _count)
     if args.get("units"):
         availableUnitsStr = """time units: s(econds), m(inutes), h(ours), d(ays)
         \rmass units: mg, milligram(s), ug, mcg, microgram(s), g, gram(s)"""

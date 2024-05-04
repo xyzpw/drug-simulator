@@ -24,6 +24,13 @@ def readFile(location: str) -> dict:
     fileContents: dict = json.loads(fileContents)
     return fileContents
 
+def validateMethods(usrArgs: dict, usrMethods: list):
+    methods = ["probability", "linear", "linearabs", "dr_max"]
+    for method in methods:
+        if method in usrMethods:
+            usrArgs[method] = True
+    return usrArgs
+
 def validateFileArgs(location: str, args: dict) -> dict:
     if not str(location).endswith(".json"): location += ".json"
     phContents = readFile(location)
@@ -37,8 +44,17 @@ def validateFileArgs(location: str, args: dict) -> dict:
         "msg",
         "bioavailability",
         "dist_time",
+        "dr",
+        "irfrac",
+        "methods",
     ]
     for i in fileArgArray:
+        if i == "methods":
+            if phContents.get(i) != None:
+                args = validateMethods(args, phContents.get(i))
+            continue
         if not bool(args.get(i)) and bool(phContents.get(i)):
             args[i] = phContents.get(i)
+            if i == "bioavailability":
+                args[i] = float(args[i])
     return args
