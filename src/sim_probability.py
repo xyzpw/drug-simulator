@@ -80,6 +80,7 @@ def initiateDR(drugInfo: object, pkInfo: object):
     delayedHasTmaxed = True if getCurrentEpoch() >= delayedStartingEpoch + tmax else False
     if pkInfo.usingTimeOrElapse:
         tmaxedEpoch = startingEpoch + tmax
+        delayedTmaxedEpoch = delayedStartingEpoch + tmax
     elif pkInfo.startAtCmax:
         tmaxedEpoch = startingEpoch
     delayedPhase = "absorption"
