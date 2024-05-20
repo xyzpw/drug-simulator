@@ -119,12 +119,14 @@ def getStartingTime() -> float:
             return _timeConversions.getEpochFromElapseTime(hour, minute)
         except:
             raise ValueError("invalid elapse value")
+    elif args.get("date") != None:
+        return _timeConversions.getEpochFromDatetime(args.get("date"))
     return getCurrentEpoch()
 
 setattr(simInfo, "startingTime", getStartingTime())
 
 isBiphasic = t12a != None and distTime != None
-usingTimeOrElapse = args.get("time") != None or args.get("elapse") != None
+usingTimeOrElapse = args.get("time") != None or args.get("elapse") != None or args.get("date") != None
 updateIntervalSeconds = 1/20
 
 setattr(simInfo, "isBiphasic", isBiphasic)

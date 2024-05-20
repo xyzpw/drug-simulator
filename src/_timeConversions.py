@@ -5,6 +5,7 @@ import time
 timePattern = re.compile(r"^(?P<time>\d+|\d+\.\d+|\.\d+)(?:(?:\s)?(?P<unit>s|sec|second(?:s)?|m|min|minute(?:s)?|h|hour(?:s)?|d|day(?:s)?))?$")
 
 readableTimePattern = re.compile(r"\A(?P<time>\d{1,2}:\d{1,2}|\d{4})\Z")
+datetimePattern = re.compile(r"^(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})\s?(?P<hour>\d{2})(?P<minute>\d{2})$")
 def getHoursAndMinutesFromReadableTime(readableTime) -> tuple:
     try:
         hoursAndMinutes = readableTimePattern.search(readableTime).group("time")
@@ -63,3 +64,15 @@ def fixTimeUI(timeUI: str) -> float:
         return float(fixedTime)
     else:
         return float(unfixedTime)
+
+def getEpochFromDatetime(usrDatetime: str) -> float:
+    dateRegexMatch = datetimePattern.search(usrDatetime)
+    dateReGroup = lambda g: int(dateRegexMatch.group(g))
+    epoch = datetime.datetime(
+        dateReGroup("year"),
+        dateReGroup("month"),
+        dateReGroup("day"),
+        dateReGroup("hour"),
+        dateReGroup("minute")
+    ).timestamp()
+    return epoch

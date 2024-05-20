@@ -36,6 +36,8 @@ def validateArgs(args: dict):
         raise SystemExit("probability and linear cannot be used simultaneously")
     if args.get("time") != None and args.get("elapse") != None:
         raise SystemExit("time and elapse cannot be used simultaneously")
+    if args.get("date") != None and (args.get("time") != None or args.get("elapse") != None):
+        raise SystemExit("date cannot be used with time or elapse")
     if args.get("bioavailability") != None:
         fValue = args.get("bioavailability")
         if not 1 >= fValue > 0:
@@ -83,9 +85,10 @@ def createArgs():
     parser.add_argument("--file", help="reads pharmacokinetic information from a json file", metavar="<file_name>")
     parser.add_argument("--count", help="number of doses administered", metavar="N", default=1, type=float)
     parser.add_argument("--t12a", help="distribution half-life of the drug to be simulated", metavar="<time>[ unit]")
-    parser.add_argument("--dist_time", help="time it takes to complete the distribution phase", metavar="<time>[ unit]")
+    parser.add_argument("--dist-time", help="time it takes to complete the distribution phase", metavar="<time>[ unit]")
     parser.add_argument("--biphasic", help="uses a biphasic elimination method", action="store_true")
-    parser.add_argument("--time_format", help="time format displayed upon simulation commencement", metavar="(12|24)")
+    parser.add_argument("--time-format", help="time format displayed upon simulation commencement", metavar="(12|24)")
+    parser.add_argument("--date", help="date and time of drug administration", metavar="YYYYmmddhhmm")
     return parser
 
 #lolayylmao:DD
