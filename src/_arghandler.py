@@ -44,11 +44,14 @@ def validateArgs(args: dict):
             raise SystemExit("bioavailability must be greater than 0 and no more than 1")
     if args.get("dr_max"):
         if args.get("dr") == None:
-            raise SystemExit("'dr_max' must be accompanied by 'dr'")
+            raise SystemExit("'dr-max' must be accompanied by 'dr'")
         if args.get("dr_max") and args.get("probability"):
-            raise SystemExit("'dr_max' and 'probability' cannot be used simultaneously")
+            raise SystemExit("'dr-max' and 'probability' cannot be used simultaneously")
     if (args.get("biphasic") or args.get("t12a") != None or args.get("dist_time")) and args.get("probability"):
         raise SystemExit("biphasic and probability method cannot be used simultaneously")
+    if args.get("minimum") != None:
+        if not re.search(r"\A(?:\d*?\.)?\d+(\s?(?:milligrams?|mg|micrograms?|mcg|ug|grams?|g))?\Z", args.get("minimum")):
+            raise SystemExit("invalid format for `minimum` argument")
     if args.get("clear"):
         #NOTE: Some terminals do not clear buffer. Use `os.system("printf '\e[3J' && clear")` if your terminal does not do this by default.
         os.system("clear" if os.name=="nt" else "clear")
@@ -79,7 +82,7 @@ def createArgs():
     parser.add_argument("--dr", help="duration until second part of dose is released (delayed release form)", metavar="<time>[ unit]")
     parser.add_argument("--irfrac", help="fraction of dose that is instant release (used with dr)", metavar="decimal")
     parser.add_argument("--lagtime", help="time taken for drug to appear", metavar="<time>[ unit]")
-    parser.add_argument("--dr_max", help="displays the maximum achieved concentration since starting the simulation", action="store_true")
+    parser.add_argument("--dr-max", help="displays the maximum achieved concentration since starting the simulation", action="store_true")
     parser.add_argument("--clear", help="clears the screen prior to script commencement", action="store_true")
     parser.add_argument("--msg", help="custom message on start", metavar="<msg>")
     parser.add_argument("--file", help="reads pharmacokinetic information from a json file", metavar="<file_name>")
@@ -88,7 +91,8 @@ def createArgs():
     parser.add_argument("--dist-time", help="time it takes to complete the distribution phase", metavar="<time>[ unit]")
     parser.add_argument("--biphasic", help="uses a biphasic elimination method", action="store_true")
     parser.add_argument("--time-format", help="time format displayed upon simulation commencement", metavar="(12|24)")
-    parser.add_argument("--date", help="date and time of drug administration", metavar="YYYYmmddhhmm")
+    parser.add_argument("--date", help="date and time of drug administration", metavar="YYYYmmdd hhmm")
+    parser.add_argument("--minimum", help="minimum concentration before script completion", metavar="<concentration>[ unit]")
     return parser
 
 #lolayylmao:DD

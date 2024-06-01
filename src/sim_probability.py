@@ -58,7 +58,7 @@ def initiate(drugInfo, pkInfo):
                 currentProbability = fixForPrecision(currentProbability, precision)
             resultOutput = probabilityResult(currentProbability, precision, False)
         print("\x1b[2K%s" % resultOutput, end="\r", flush=True)
-        if checkIfEliminated(currentProbability):
+        if checkIfEliminated(currentProbability, minimum_concentration=pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 
@@ -161,7 +161,7 @@ def initiateDR(drugInfo: object, pkInfo: object):
             delayedHasTmaxed
         )
         print("\x1b[1A\r\x1b[2K%s\n\r\x1b[2K%s" % (resultOutput[0], resultOutput[1]), end="", flush=True)
-        if checkIfEliminated(currentDelayedProbability, delayedPhase):
+        if checkIfEliminated(currentDelayedProbability, delayedPhase, pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 

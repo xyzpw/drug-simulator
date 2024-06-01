@@ -98,7 +98,7 @@ def initiate(drugInfo: object, pkInfo: object):
         else:
             concentration_response = defaultResult(phase, currentConcentration, precision)
         print("\x1b[2K%s" % concentration_response, end="\r", flush=True)
-        if checkIfEliminated(currentConcentration, phase):
+        if checkIfEliminated(currentConcentration, phase, pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 
@@ -112,7 +112,7 @@ def initiateDR(drugInfo: object, pkInfo: object):
     adjustedPrecision, adjustedConcentration = int(precision), float(dose)
     tmax, hasTmaxed, phase, timeSinceTmax, tmaxedEpoch = infoContainer.getPeakAndPhaseValues()
     t12, t12a, t12abs = drugInfo.t12, drugInfo.t12a, drugInfo.t12abs
-    if drugInfo.lagtime != None and pkInfo.usingTimeOrElapsed:
+    if drugInfo.lagtime != None and pkInfo.usingTimeOrElapse:
         startingEpoch = pkInfo.startingTime + drugInfo.lagtime
     elif drugInfo.lagtime != None and not pkInfo.usingTimeOrElapse:
         startingEpoch = getCurrentEpoch()
@@ -307,7 +307,7 @@ def initiateDR(drugInfo: object, pkInfo: object):
                     max_concentration=drMaxConcentration
                 )
         print("\x1b[2K%s" % concentration_response, end="\r", flush=True)
-        if checkIfEliminated(totalConcentration, delayedPhase):
+        if checkIfEliminated(totalConcentration, delayedPhase, pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 

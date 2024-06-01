@@ -18,3 +18,12 @@ def concentrationFloatString(concentration: float, precision: int):
     if precision != 0:
         return str("{:."+str(precision)+"f}").format(concentration)
     return concentration
+
+def unitToMgFraction(unit: str) -> float:
+    if unit in ["g", "gram", "grams"]:
+        frac = 1e3
+    elif unit in ["mcg", "ug", "microgram", "micrograms"]:
+        frac = 1/1e3
+    elif unit == None or unit in ["mg", "milligram", "milligrams"]:
+        frac = 1
+    return frac

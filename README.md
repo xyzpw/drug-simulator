@@ -89,7 +89,7 @@ When a drug is administered intravenously, it has an initial shorter half-life (
 
 Usage example for simulating a bolus i.v. injection:
 ```bash
-$ ./drug-simulator.py --tmaxed --t12 0.9m --t12a 0.3m --dist_time 1.5m --dose 1.3mg -p 3
+$ ./drug-simulator.py --tmaxed --t12 0.9m --t12a 0.3m --dist-time 1.5m --dose 1.3mg -p 3
 ```
 > [!TIP]
 > You may also use "--biphasic" alone, which will prompt for the distribution half-life and time in contrast to using it via arguments.

@@ -99,7 +99,7 @@ def initiate(drugInfo: object, pkInfo: object):
         else:
             concentration_response = defaultResult(phase, currentConcentration, precision, massUnit)
         print("\x1b[2K%s" % concentration_response, end="\r", flush=True)
-        if checkIfEliminated(currentConcentration, phase):
+        if checkIfEliminated(currentConcentration, phase, pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 
@@ -279,7 +279,7 @@ def initiateDR(drugInfo: object, pkInfo: object) -> None:
             else:
                 concentration_response = defaultDrResult(phase, delayedPhase, totalConcentration, precision)
         print("\x1b[2K%s" % concentration_response, end='\r', flush=True)
-        if checkIfEliminated(totalConcentration, delayedPhase):
+        if checkIfEliminated(totalConcentration, delayedPhase, pkInfo.minimum):
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 

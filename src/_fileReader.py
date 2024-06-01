@@ -46,6 +46,7 @@ def validateFileArgs(location: str, args: dict) -> dict:
         "dist_time",
         "dr",
         "irfrac",
+        "minimum",
         "methods",
     ]
     for i in fileArgArray:

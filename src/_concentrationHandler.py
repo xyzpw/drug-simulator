@@ -71,6 +71,7 @@ def completeScript(elapsed: bool, autocomplete: int | float):
     input("%s. Press enter to exit" % completionMessage)
     raise SystemExit(0)
 
-def checkIfEliminated(concentration, phase=None):
-    if concentration <= 0 and phase in ["elimination", None, "distribution"]:
+def checkIfEliminated(concentration, phase=None, minimum_concentration=None):
+    if minimum_concentration == None: minimum_concentration = 0
+    if concentration <= minimum_concentration and phase in ["elimination", None, "distribution"]:
         return True

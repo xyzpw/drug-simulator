@@ -10,6 +10,7 @@ from src._uiHandler import *
 from src._fileReader import *
 from src.promptAuth import *
 from src._simlogger import *
+from src._dosageUnits import unitToMgFraction
 from src import sim_default, sim_linear, sim_probability
 
 myDrug, simInfo = SimulationInfoContainer(), SimulationInfoContainer()
@@ -133,6 +134,11 @@ setattr(simInfo, "isBiphasic", isBiphasic)
 setattr(simInfo, "usingTimeOrElapse", usingTimeOrElapse)
 setattr(myDrug, "linearabs", args.get("linearabs"))
 setattr(simInfo, "autocomplete", args.get("autocomplete"))
+setattr(
+    simInfo,
+    "minimum",
+    fixDose(args.get("minimum"))[0] * unitToMgFraction(fixDose(args.get("minimum"))[1]) if args.get("minimum") != None else None
+)
 
 def startLag():
     import re
