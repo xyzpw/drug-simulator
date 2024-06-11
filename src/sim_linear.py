@@ -12,7 +12,7 @@ def initiate(drugInfo: object, pkInfo: object):
     infoContainer = InfoFetcher(drugInfo, pkInfo)
     dose, massUnit, precision, isBiphasic = infoContainer.getMainValues()
     currentConcentration = 0
-    adjustedPrecision, adjustedConcentration = int(precision), float(currentConcentration)
+    adjustedPrecision, adjustedConcentration = int(precision), float(dose)
     tmax, hasTmaxed, phase, timeSinceTmax, tmaxedEpoch = infoContainer.getPeakAndPhaseValues()
     t12, t12a, t12abs = drugInfo.t12, drugInfo.t12a, drugInfo.t12abs
     if drugInfo.lagtime != None and pkInfo.usingTimeOrElapse:
