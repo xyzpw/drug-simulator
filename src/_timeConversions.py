@@ -48,16 +48,20 @@ def convertToSeconds(_time, unit) -> float:
             return _time * 86400
     return _time
 
-def fixTimeUI(timeUI: str) -> float:
-    if timeUI in ['', None]:
+def fixTimeUI(timeUi: str) -> float:
+    if timeUi in ['', None]:
         return
-    if not isinstance(timeUI, str):
-        timeUI = str(timeUI)
-    timePatternSearch = timePattern.search(timeUI)
+    if not isinstance(timeUi, str):
+        timeUi = str(timeUi)
+    if "/" in timeUi:
+        from src._uiHandler import getValueFromFraction
+        timeUiFractionValue = getValueFromFraction(timeUi)
+        timeUi = re.sub(r"^((?:\d*\.)?\d+/(?:\d*\.)?\d+)", f"{timeUiFractionValue}", timeUi)
+    timePatternSearch = timePattern.search(timeUi)
     try:
         unfixedTime = float(timePatternSearch.group("time"))
     except:
-        raise ValueError(f"invalid time input: '{timeUI}'")
+        raise ValueError(f"invalid time input: '{timeUi}'")
     if bool(timePatternSearch.group("unit")):
         unit = timePatternSearch.group("unit")
         fixedTime = convertToSeconds(unfixedTime, unit)

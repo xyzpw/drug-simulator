@@ -8,13 +8,18 @@ __all__ = [
     "fixT12",
     "fixDr",
     "doseWithBioavailability",
+    "getValueFromFraction",
 ]
 
 def fixDose(dose: str|float, isProbability=False) -> tuple:
     massunit = None
     if isProbability:
         return float(1), massunit
-    if isinstance(dose, str): dose = dose.replace(",", "")
+    if isinstance(dose, str):
+        dose = dose.replace(",", "")
+        if "/" in dose:
+            doseFractionValue = getValueFromFraction(dose)
+            dose = re.sub(r"^((?:\d*\.)?\d+\s*/\s*(?:\d*\.)?\d+)", f"{doseFractionValue}", dose)
     massUnitSearch = re.search(r"^(?P<dose>(?:\d+?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
     if bool(massUnitSearch):
         dose = float(massUnitSearch.group("dose"))
@@ -51,3 +56,8 @@ def fixDr(irFrac: float, drLagTime: float|int) -> tuple:
     if 1 < irFrac <= 0:
         raise ValueError("instant release must greater than 0 and less than 1")
     return irFrac, drLagTime
+
+def getValueFromFraction(userValue: str):
+    fractionReMatch = re.search(r"^(?P<num>(?:\d*\.)?\d+)\s*?/\s*?(?P<den>(?:\d*\.)?\d+)", userValue)
+    numerator, denominator = float(fractionReMatch.group("num")), float(fractionReMatch.group("den"))
+    return numerator / denominator

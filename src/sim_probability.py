@@ -58,7 +58,7 @@ def initiate(drugInfo, pkInfo):
                 currentProbability = fixForPrecision(currentProbability, precision)
             resultOutput = probabilityResult(currentProbability, precision, False)
         print("\x1b[2K%s" % resultOutput, end="\r", flush=True)
-        if checkIfEliminated(currentProbability, minimum_concentration=pkInfo.minimum):
+        if checkIfEliminated(currentProbability, minimum_concentration=pkInfo.minimum) and hasTmaxed:
             timeSinceAdministration = timeSinceStart + drugInfo.lagtime if drugInfo.lagtime != None else float(timeSinceStart)
             completeScript(timeSinceAdministration, pkInfo.autocomplete)
 

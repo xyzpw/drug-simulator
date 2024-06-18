@@ -261,7 +261,7 @@ def initiateDR(drugInfo: object, pkInfo: object) -> None:
         totalConcentration = fixForPrecision(totalConcentration, precision)
         if pkInfo.dr_max:
             if totalConcentration > drMaxConcentration:
-                drMaxConcentration = float(totalConcentration)
+                drMaxConcentration = float(totalConcentration) if precision != 0 else int(totalConcentration)
         if massUnit != None and phase == "elimination" and delayedPhase == "elimination":
             adjustedConcentration, massUnit, adjustedPrecision = adjustConcentrationFromUnit(totalConcentration, adjustedConcentration, precision, adjustedPrecision, massUnit)
             if pkInfo.dr_max:
