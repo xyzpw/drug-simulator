@@ -48,13 +48,13 @@ def convertToSeconds(_time, unit) -> float:
             return _time * 86400
     return _time
 
-def fixTimeUI(timeUi: str) -> float:
+def fixTimeUi(timeUi: str) -> float:
     if timeUi in ['', None]:
         return
     if not isinstance(timeUi, str):
         timeUi = str(timeUi)
     if "/" in timeUi:
-        from src._uiHandler import getValueFromFraction
+        from src.uiHandler import getValueFromFraction
         timeUiFractionValue = getValueFromFraction(timeUi)
         timeUi = re.sub(r"^((?:\d*\.)?\d+/(?:\d*\.)?\d+)", f"{timeUiFractionValue}", timeUi)
     timePatternSearch = timePattern.search(timeUi)
@@ -80,3 +80,17 @@ def getEpochFromDatetime(usrDatetime: str) -> float:
         dateReGroup("minute")
     ).timestamp()
     return epoch
+
+def getStartingEpoch(usrArgs: dict) -> float:
+    method = "time" if usrArgs.get("time") != None else ("elapsed" if usrArgs.get("elapsed") != None else ("date" if usrArgs.get("date") != None else None))
+    match method:
+        case "time":
+            hour, minute = getHoursAndMinutesFromReadableTime(usrArgs.get(method))
+            return getEpochFromHourAndMinute(hour, minute)
+        case "elapsed":
+            hour, minute = getHoursAndMinutesFromReadableTime(usrArgs.get(method))
+            return time.time() - getSecondsFromHourAndMinute(hour, minute)
+        case "date":
+            return getEpochFromDatetime(usrArgs.get(method))
+        case _:
+            return time.time()

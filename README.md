@@ -5,99 +5,133 @@
 Simulate the absorption and elimination of drugs in real time using *real* pharmacokinetic formulas.<br>
 
 ![drug-simulator-preview](https://github.com/xyzpw/drug-simulator/assets/76017734/6c39d9f5-2b8b-4aa4-a056-81cf2711c077)
-## What It Does
-The program will display the concentration of the drug at an increasing rate during the absorption phase. The displayed concentration will begin decreasing subsequent to the tmax (time to peak concentration).
 
-## Prerequisites
-- Terminal supporting ANSI codes
+## How it Works
+The program will prompt for values which will be used as pharmacokinetic parameters to calculate and display the concentration of the drug in someone's body in real time.<br>
+Several options can be used which effect these results, such as route of administration.
 
 ## Usage
-Firstly, you should display the help menu to list additional options:
+Executing the script:
 ```bash
-$ python3 drug-simulator.py --help
+$ python3 drug-simulator.py
 ```
 
-To execute the script in Linux via `./drug-simulator.py`, you must add execution perms:
+Or add execution perms:
 ```bash
 $ chmod +x drug-simulator.py
 ```
 
+Which will allow you to run it via:
+```bash
+$ ./drug-simulator.py
+```
+
+Run help to see additional usage:
+```bash
+$ ./drug-simulator.py --help
+```
+
 ### User Input
-Starting the script without arguments will ask for a few prompts about the drug being simulated:
-```text
+Upon running the script, required values will be prompted for input. Given that the script was run without additional arguments, the simulation assumes IV bolus, which will prompt the following values:
+```txt
 dose:
-tmax:
+half-life:
+```
+
+The default time unit is seconds, to change this, type in the unit after the time digit, e.g. "9 hours" or "9h" for 9 hours.<br>
+Dose units can also be used.
+
+The simulation will begin upon entering the last required value.
+
+### Route of Administration
+Different routes of administration can be simulated with the `roa` argument:
+```bash
+$ ./drug-simulator.py --roa route
+```
+
+#### IV Bolus
+IV bolus will be used by default.
+
+#### Oral
+Changing the route of administration will also alter the values required to begin the simulation.<br>
+In this case, the following prompts will be displayed:
+
+```txt
+dose:
+bioavailability:
 absorption half-life:
 half-life:
 ```
 
-After the information has been given, the simulation will start.<br>
-
-Optionally, you can use the `linearabs` option if you prefer not to use absorption half-lives or don't know the value:
+##### Delayed Release
+Delayed release drugs can be simulated where a specific fraction of the drug is released instantly and some time before the next dose. For example, Adderall XR has 50% of the beads release instantly, and the other half is intended to release 4 hours later.
 ```bash
-$ ./drug-simulator.py --linearabs
+$ ./drug-simulator.py --roa oral-dr --dr 4h --irfrac 0.5 --msg "adderall xr"
 ```
 
-#### Time Units
-When entering the time, units are by default set to seconds.<br>
-Below are some examples for time units:
-```text
-1 s, 1 second, 1 seconds
-1 h, 1 hour, 1 hours
-1 d, 1 day, 1 days
-```
-Using a space between time and units are optional, therefor, 1s and 1 second are equivalent.
-
-#### Arguments
-Optionally, you can use arguments prior to the script commencement, e.g.<br>
-`./drug-simulator.py --dose 60` will skip the `dose:` prompt because it has already been given as an argument.<br>
-
-#### Timing
-You can start the simulation at a specified time instead of starting once the script starts:
-```text
-./drug-simulator.py --time "13:00" # initiates the simulation at 1pm
-./drug-simulator.py --elapse "1:30" # initiates the simulation 1.5 hours prior to the program commencement
-```
-
-#### Delayed Release and Lag Time
-Within **drug-simulator**, there is an ability to simulate delayed release drugs, for example, consider Adderall XR, 50% of it releases instantly, while the remaining 50% is intended to release 4 hours later. Furthermore, you can use the `lagtime` argument which will have a countdown before the absorption phase begins, accounting for the time it takes the administered drug to reach the systemic circulation, e.g. pill ingesting for example.
+Additionally, `dr-max` can be used to display the highest concentration achieved since the simulation has started:
 ```bash
-$ ./drug-simulator.py --lagtime 5m --dr 4h
-```
-Another example is coffee, which, on average, contains 80 mg of caffeine per serving.<br>
- Research suggests liquids take 2-5 minutes to appear in plasma:
-```bash
-$ ./drug-simulator.py --lagtime 2m
+$ ./drug-simulator.py --roa oral-dr --dr 4h --irfrac 0.5 --dr-max
 ```
 
-#### Custom Messages
-You can use custom messages at the beginning of the script with the `msg` argument. This can be used if you have multiple terminals open and want to keep track of what you are simulating:
+##### Prodrug
+Prodrug/active drug concentrations can be *estimated* using oral route of administration:
+```bash
+$ ./drug-simulator.py --roa oral-prodrug -f 0.964 --prodrug 0.297 --msg vyvanse
+```
+
+> [!NOTE]
+> The active drug concentration are estimates and not precise!
+
+### Lagtime
+The lagtime feature can be used to start a countdown before the absorption phase begins, this can account for the time it takes a drug to reach the systemic circulation, e.g. pill ingesting.<br>
+For example, water takes 2&#8211;5 minutes to reach plasma after ingestion.
+```bash
+$ ./drug-simulator.py --roa oral --dose "80 mg" --lagtime 2m --msg "caffeine from coffee"
+```
+
+### Timing
+The simulation can be started assuming administration occurred prior to the simulation commencement.
+
+Start at a specific time:
+```bash
+$ ./drug-simulator.py --time 0554
+```
+
+Administration at a specific date:
+```bash
+$ ./drug-simulator.py --date "20240808 1922"
+```
+
+Elapsed time since administration:
+```bash
+# 72 hours post-dose
+$ ./drug-simulator.py --elapsed 7200
+```
+
+These options will take into account `lagtime` if it is used.
+
+### Custom Messages
+Custom messages can be used, for example, if you have multiple simulations running and want to keep track of each:
 ```bash
 $ ./drug-simulator.py --msg "anything can go here"
 ```
 
-#### Reading From File
-Pharmacokinetic information can be read through a file within the same directory:
+### Reading Files
+Pharmacokinetic information can be stored in a json file to prevent user-input prompts:
 ```bash
-$ ./drug-simulator.py --file "pharmacokinetic_example.json"
+$ ./drug-simulator.py --file pharmacokinetic_example
 ```
-> [!NOTE]
-> Adding ".json" is optional
 
-#### Biphasic Elimination
-When a drug is administered intravenously, it has an initial shorter half-life (called distribution or alpha half-life) as it is being distributed throughout the body. Subsequent to pseudo-equilibrium, the longer half-life (called terminal or beta half-life) is used.<br>
-
-Usage example for simulating a bolus i.v. injection:
-```bash
-$ ./drug-simulator.py --tmaxed --t12 0.9m --t12a 0.3m --dist-time 1.5m --dose 1.3mg -p 3
-```
 > [!TIP]
-> You may also use "--biphasic" alone, which will prompt for the distribution half-life and time in contrast to using it via arguments.
+> ".json" is optional
 
 ## Contributing
-Contributing small code changes such as bug fixes could be acceptable.<br>
-
-If any bugs, inaccuracies, or typos are found, be sure to report them via issues.
+For any typos, bugs, or inaccuracies found, report this in issues.<br>
+Code contributions might be accepted if they do not include:
+- changes to formulas
+- major changes
+- changes to usage
 
 ## See Also
 https://en.wikipedia.org/wiki/Pharmacokinetics<br>
