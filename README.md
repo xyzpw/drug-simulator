@@ -4,7 +4,7 @@
 
 Simulate the absorption and elimination of drugs in real time using *real* pharmacokinetic formulas.<br>
 
-![drug-simulator-preview](https://github.com/xyzpw/drug-simulator/assets/76017734/6c39d9f5-2b8b-4aa4-a056-81cf2711c077)
+<img width="664px" height="400px" src="https://github.com/user-attachments/assets/b872064c-1b9d-4672-b9b1-14f071c28b62"/>
 
 ## How it Works
 The program will prompt for values which will be used as pharmacokinetic parameters to calculate and display the concentration of the drug in someone's body in real time.<br>
