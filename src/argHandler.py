@@ -74,7 +74,7 @@ def validateArgs(argsDict: dict):
         _displayManual()
         raise SystemExit(0)
     if not False in [checkArgHasValue(i) for i in ["msg", "count"]]:
-        argsDict = addCountToMsg(argsDict.get("msg"), argsDict.get("count"))
+        argsDict["msg"] = addCountToMsg(argsDict.get("msg"), argsDict.get("count"))
 
     # arguments that can not be used together (only one at a time)
     argsWithConflicts = [

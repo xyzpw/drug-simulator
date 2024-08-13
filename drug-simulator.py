@@ -11,7 +11,6 @@ from src.uiHandler import *
 from src.simulationDetector import *
 from simulations.lagtimeCountdown import startLagtimeCountdown
 
-#TODO: validate the project is good for pushing to github
 args = parseAndReturnArgs()
 
 drugFile = args.get("file")
