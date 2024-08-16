@@ -2,12 +2,12 @@
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/xyzpw/drug-simulator/total)
 ![GitHub repo size](https://img.shields.io/github/repo-size/xyzpw/drug-simulator)
 
-Simulate the absorption and elimination of drugs in real time using *real* pharmacokinetic formulas.<br>
+**drug-simulator** is a program designed to simulate drug concentrations in real time using user-prompted values.
 
 <img width="664px" height="400px" src="https://github.com/user-attachments/assets/b872064c-1b9d-4672-b9b1-14f071c28b62"/>
 
 ## How it Works
-The program will prompt for values which will be used as pharmacokinetic parameters to calculate and display the concentration of the drug in someone's body in real time.<br>
+The program prompts for values which will be used to calculate and display drug concentrations in real time to the terminal.<br>
 Several options can be used which effect these results, such as route of administration.
 
 ## Usage
@@ -96,11 +96,13 @@ The simulation can be started assuming administration occurred prior to the simu
 Start at a specific time:
 ```bash
 $ ./drug-simulator.py --time 0554
+$ ./drug-simulator.py --time "5:54 am"
 ```
 
 Administration at a specific date:
 ```bash
 $ ./drug-simulator.py --date "20240808 1922"
+$ ./drug-simulator.py --date "08/08/2024 7:22 pm"
 ```
 
 Elapsed time since administration:

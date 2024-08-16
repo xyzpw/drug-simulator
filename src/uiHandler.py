@@ -14,6 +14,8 @@ __all__ = [
     "getUiValue",
     "getSimulationMessage",
     "detectAndFixValue",
+    "getValueFromMultiplier",
+    "fixCountValue",
 ]
 
 def fixDose(dose: str|float, isProbability=False) -> tuple:
@@ -25,6 +27,9 @@ def fixDose(dose: str|float, isProbability=False) -> tuple:
         if "/" in dose:
             doseFractionValue = getValueFromFraction(dose)
             dose = re.sub(r"^((?:\d*\.)?\d+\s*/\s*(?:\d*\.)?\d+)", f"{doseFractionValue}", dose)
+        elif "*" in dose:
+            doseMultiplierValue = getValueFromMultiplier(dose)
+            dose = re.sub(r"((?:\d*\.)?\d+\s*?\*\s*?(?:\d*\.)?\d+)", f"{doseMultiplierValue}", dose)
     massUnitSearch = re.search(r"^(?P<dose>(?:\d+?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
     if bool(massUnitSearch):
         dose = float(massUnitSearch.group("dose"))
@@ -39,6 +44,20 @@ def fixDose(dose: str|float, isProbability=False) -> tuple:
             case _:
                 raise SystemExit("invalid mass unit for dosage")
     return fixTimeUi(str(dose)), massunit
+
+def fixCountValue(value: int | float | str) -> float:
+    isInteger = re.search(r"^\d+?$", value)
+    isFloat = re.search(r"^\d+?\.\d+?$", value)
+    isMultiplier = "*" in str(value)
+    isFraction = "/" in str(value)
+    if isInteger:
+        return int(value)
+    elif isFloat:
+        return float(value)
+    elif isMultiplier:
+        return getValueFromMultiplier(value)
+    elif isFraction:
+        return getValueFromFraction(value)
 
 def fixTmax(tmax: float|str, peaked=False) -> float:
     if peaked or tmax in ["now", "0", ""]:
@@ -66,6 +85,11 @@ def getValueFromFraction(userValue: str):
     fractionReMatch = re.search(r"^(?P<num>(?:\d*\.)?\d+)\s*?/\s*?(?P<den>(?:\d*\.)?\d+)", userValue)
     numerator, denominator = float(fractionReMatch.group("num")), float(fractionReMatch.group("den"))
     return numerator / denominator
+
+def getValueFromMultiplier(userValue: str):
+    multiplyNumberRegex = re.search(r"^(?P<multiplier>(?:\d*\.)?\d+)\s*?\*\s*?(?P<number>(?:\d*\.)?\d+)", userValue)
+    number = float(multiplyNumberRegex.group("multiplier")) * float(multiplyNumberRegex.group("number"))
+    return number
 
 def getUiValue(usrArgs: dict, desiredValueArg: str, altPromptText: str):
     """Gets value from arg if it exists, otherwise prompts the user for the value.

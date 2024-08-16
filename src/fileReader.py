@@ -13,6 +13,8 @@ def readFile(location: str) -> dict:
     filename = filenameRegexSearch.group("name") + ".json" if filenameRegexSearch else None
     if not filename:
         return
+    if not pathlib.Path(filename).exists():
+        raise SystemExit("no file with name '%s' exists" % filename)
     with open(filename, "r") as f:
         fileContent = json.load(f)
     return fileContent
@@ -36,5 +38,4 @@ def validateFileArgs(location: str, usrArgs: dict) -> dict:
         _value = fileContent.get(name)
         if checkShouldUpdate(name):
             updateUsrArgs(name, _value)
-        del name, _value
     return usrArgs

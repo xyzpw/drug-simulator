@@ -33,7 +33,7 @@ try:
 
     # Adjust dose if `count` argument is used
     if args.get("count"):
-        simulationInfo.dose = simulationInfo.dose[0] * args.get("count"), simulationInfo.dose[1]
+        simulationInfo.dose = simulationInfo.dose[0] * fixCountValue(args.get("count")), simulationInfo.dose[1]
 
     # Set each of these values to `0` if they are not used
     for i in ["precision", "minimum"]:

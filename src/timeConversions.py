@@ -5,7 +5,7 @@ import time
 timePattern = re.compile(r"^(?P<time>\d+|\d+\.\d+|\.\d+)(?:(?:\s)?(?P<unit>s|sec|second(?:s)?|m|min|minute(?:s)?|h|hour(?:s)?|d|day(?:s)?))?$")
 
 readableTimePattern = re.compile(r"\A(?P<time>\d{1,2}:\d{1,2}|\d{4})\Z")
-datetimePattern = re.compile(r"^(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})\s?(?P<hour>\d{2})(?P<minute>\d{2})$")
+datetimePattern = re.compile(r"^(?P<year>\d{4})-?(?P<month>\d{2})-?(?P<day>\d{2})\s?(?P<hour>\d{2}):?(?P<minute>\d{2})$")
 def getHoursAndMinutesFromReadableTime(readableTime) -> tuple:
     try:
         hoursAndMinutes = readableTimePattern.search(readableTime).group("time")
@@ -57,6 +57,10 @@ def fixTimeUi(timeUi: str) -> float:
         from src.uiHandler import getValueFromFraction
         timeUiFractionValue = getValueFromFraction(timeUi)
         timeUi = re.sub(r"^((?:\d*\.)?\d+/(?:\d*\.)?\d+)", f"{timeUiFractionValue}", timeUi)
+    elif "*" in timeUi:
+        from src.uiHandler import getValueFromMultiplier
+        timeUiMultiplierValue = getValueFromMultiplier(timeUi)
+        timeUi = re.sub(r"((?:\d*\.)?\d+\s*?\*\s*?(?:\d*\.)?\d+)", f"{timeUiMultiplierValue}", timeUi)
     timePatternSearch = timePattern.search(timeUi)
     try:
         unfixedTime = float(timePatternSearch.group("time"))
@@ -81,16 +85,43 @@ def getEpochFromDatetime(usrDatetime: str) -> float:
     ).timestamp()
     return epoch
 
+def convert12HourTo24Hour(timeString: str) -> str:
+    timeString = timeString.lower()
+    timeRegex = re.search(r"^(\d{1,2}):(\d{2})\s*?(am|pm)$", timeString)
+    hour, minute, meridiem = timeRegex.groups()
+    if meridiem == "am" or meridiem == "pm" and int(hour) == 12:
+        hour = str(hour).zfill(2)
+        return f"{hour}{minute}"
+    elif meridiem == "pm":
+        hour = int(hour) + 12
+        hour = str(hour).zfill(2)
+        return f"{hour}{minute}"
+
+def usaDateToIsoDate(dateString: str) -> str:
+    dateString = dateString.lower()
+    dateRegex = re.search(
+        r"^(\d{1,2})/(\d{1,2})/(\d{4}) (\d{1,2}):(\d{2})\s*?(am|pm)",
+        dateString, flags=re.IGNORECASE
+    )
+    month, day, year, hour, minute, meridiem = dateRegex.groups()
+    dateString = f"{year.zfill(2)}{month.zfill(2)}{day.zfill(2)}"
+    timeString = convert12HourTo24Hour(f"{hour}:{minute} {meridiem}")
+    return f"{dateString} {timeString}"
+
 def getStartingEpoch(usrArgs: dict) -> float:
     method = "time" if usrArgs.get("time") != None else ("elapsed" if usrArgs.get("elapsed") != None else ("date" if usrArgs.get("date") != None else None))
     match method:
         case "time":
+            if re.search(r"am|pm", usrArgs.get(method), flags=re.IGNORECASE):
+                usrArgs[method] = convert12HourTo24Hour(usrArgs.get(method))
             hour, minute = getHoursAndMinutesFromReadableTime(usrArgs.get(method))
             return getEpochFromHourAndMinute(hour, minute)
         case "elapsed":
             hour, minute = getHoursAndMinutesFromReadableTime(usrArgs.get(method))
             return time.time() - getSecondsFromHourAndMinute(hour, minute)
         case "date":
+            if re.search(r"am|pm", usrArgs.get(method), flags=re.IGNORECASE):
+                usrArgs[method] = usaDateToIsoDate(usrArgs.get(method))
             return getEpochFromDatetime(usrArgs.get(method))
         case _:
             return time.time()
