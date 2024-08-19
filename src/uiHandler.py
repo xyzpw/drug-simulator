@@ -16,6 +16,7 @@ __all__ = [
     "detectAndFixValue",
     "getValueFromMultiplier",
     "fixCountValue",
+    "getValueFromMathInput",
 ]
 
 def fixDose(dose: str|float, isProbability=False) -> tuple:
@@ -91,6 +92,12 @@ def getValueFromMultiplier(userValue: str):
     number = float(multiplyNumberRegex.group("multiplier")) * float(multiplyNumberRegex.group("number"))
     return number
 
+def getValueFromMathInput(value: str):
+    if "/" in value:
+        return getValueFromFraction(value)
+    elif "*" in value:
+        return getValueFromMultiplier(value)
+
 def getUiValue(usrArgs: dict, desiredValueArg: str, altPromptText: str):
     """Gets value from arg if it exists, otherwise prompts the user for the value.
     No prompt will occur if `altPromptText` is set to `None`."""
@@ -120,8 +127,10 @@ def detectAndFixValue(valueName: str, value: str):
         case "bioavailability" | "irfrac" | "excretionUnchanged" | "prodrug":
             if valueName == "irfrac" and value == "":
                 return 0.5
+            if "/" in str(value) or "*" in str(value):
+                value = getValueFromMathInput(value)
             if not 1 >= float(value) >= 0:
-                raise ValueError("bioavailability must be greater than 0 and no greater than 1")
+                raise ValueError("'%s' must be greater than 0 and no greater than 1" % valueName)
             return float(value)
         case "precision":
             return int(value)
