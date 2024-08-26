@@ -1,4 +1,5 @@
 import argparse
+import re
 from src._argInfo import *
 
 __all__ = [
@@ -59,8 +60,10 @@ def getTimeFormat(usrFormat: str):
         tFormat = r"%H:%M:%S (%Y-%m-%d)"
     return tFormat
 
-def addCountToMsg(msg: str, count: float):
-    return "%dx %s" % (count, msg) if count.is_integer() else "%sx %s" % (count, msg)
+def addCountToMsg(msg: str, count: str):
+    isInt = bool(re.search(r"^\d+$", count))
+    if isInt: count = int(count)
+    return "%sx %s" % (count, msg)
 
 def _exitWithError(error):
     raise SystemExit(error)
