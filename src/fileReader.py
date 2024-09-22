@@ -31,7 +31,7 @@ def validateFileArgs(location: str, usrArgs: dict) -> dict:
     fileValueNames = [
         "dose", "t12", "t12a", "t12abs", "lagtime", "msg",
         "bioavailability", "dr", "irfrac", "minimum", "dr_max", "roa",
-        "prodrug", "activeT12",
+        "prodrug", "activeT12", "precision",
     ]
 
     for name in fileValueNames:
