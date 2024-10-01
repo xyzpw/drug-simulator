@@ -31,7 +31,7 @@ def fixDose(dose: str|float, isProbability=False) -> tuple:
         elif "*" in dose:
             doseMultiplierValue = getValueFromMultiplier(dose)
             dose = re.sub(r"((?:\d*\.)?\d+\s*?\*\s*?(?:\d*\.)?\d+)", f"{doseMultiplierValue}", dose)
-    massUnitSearch = re.search(r"^(?P<dose>(?:\d+?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
+    massUnitSearch = re.search(r"^(?P<dose>(?:\d*?\.)?\d+)\s?(?P<unit>mg|milligrams?|ug|mcg|micrograms?|g|grams?)$", str(dose))
     if bool(massUnitSearch):
         dose = float(massUnitSearch.group("dose"))
         massunit = massUnitSearch.group("unit")
